@@ -3,17 +3,16 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Image, Video, Send, X } from 'lucide-react';
-import { api, getErrorMessage } from '@/lib/api';
-import { useAuthStore } from '@/lib/store';
-import { Post } from '@/types';
+import { useAuthStore, usePostsStore } from '@/lib/store';
 import { Avatar } from '@/components/ui/Avatar';
 
 interface CreatePostFormProps {
-  onCreated: (post: Post) => void;
+  onCreated?: () => void;
 }
 
 export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const { user } = useAuthStore();
+  const { createPost, error: storeError } = usePostsStore();
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
@@ -27,19 +26,24 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
     if (!content.trim()) return;
     setLoading(true);
     try {
-      const payload: { content: string; imageUrl?: string; videoUrl?: string } = { content: content.trim() };
-      if (imageUrl.trim()) payload.imageUrl = imageUrl.trim();
-      if (videoUrl.trim()) payload.videoUrl = videoUrl.trim();
-      const { data } = await api.post<Post>('/posts', payload);
-      onCreated(data);
-      setContent('');
-      setImageUrl('');
-      setVideoUrl('');
-      setShowImageInput(false);
-      setShowVideoInput(false);
-      toast.success('Posted!');
+      const result = await createPost(
+        content.trim(),
+        imageUrl.trim() || undefined,
+        videoUrl.trim() || undefined
+      );
+      if (result) {
+        setContent('');
+        setImageUrl('');
+        setVideoUrl('');
+        setShowImageInput(false);
+        setShowVideoInput(false);
+        toast.success('Posted!');
+        onCreated?.();
+      } else if (storeError) {
+        toast.error(storeError);
+      }
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toast.error('Failed to create post');
     } finally {
       setLoading(false);
     }

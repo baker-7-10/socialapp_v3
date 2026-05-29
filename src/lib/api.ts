@@ -37,3 +37,38 @@ export const getErrorMessage = (error: unknown): string => {
   }
   return 'Something went wrong';
 };
+
+// Posts API
+export const postsApi = {
+  create: (data: { content: string; imageUrl?: string; videoUrl?: string }) =>
+    api.post('/posts', data),
+
+  list: (limit = 10, page = 1) =>
+    api.get('/posts', { params: { limit, page } }),
+
+  get: (id: string) => api.get(`/posts/${id}`),
+
+  update: (id: string, data: Partial<{ content: string; imageUrl: string; videoUrl: string }>) =>
+    api.patch(`/posts/${id}`, data),
+
+  delete: (id: string) => api.delete(`/posts/${id}`),
+};
+
+// Comments API
+export const commentsApi = {
+  list: (postId: string, limit = 20, page = 1) =>
+    api.get(`/posts/${postId}/comments`, { params: { limit, page } }),
+
+  create: (postId: string, data: { content: string; parentId?: string }) =>
+    api.post(`/posts/${postId}/comments`, data),
+
+  delete: (commentId: string) => api.delete(`/comments/${commentId}`),
+
+  react: (commentId: string, emoji: string) =>
+    api.post(`/comments/${commentId}/reactions`, { emoji }),
+
+  unreact: (commentId: string, emoji: string) =>
+    api.delete(`/comments/${commentId}/reactions`, { data: { emoji } }),
+
+  getReactions: (commentId: string) => api.get(`/comments/${commentId}/reactions`),
+};

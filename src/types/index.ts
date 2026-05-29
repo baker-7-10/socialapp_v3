@@ -36,6 +36,7 @@ export interface Post {
   author: {
     id: string;
     username: string;
+    displayName?: string | null;
     avatarUrl?: string | null;
   };
   likeCount: number;
@@ -43,10 +44,17 @@ export interface Post {
   likedByMe: boolean;
 }
 
+export interface CommentReaction {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
 export interface Comment {
   id: string;
   content: string;
   postId: string;
+  parentId?: string | null;
   authorId: string;
   createdAt: string;
   updatedAt: string;
@@ -55,6 +63,8 @@ export interface Comment {
     username: string;
     avatarUrl?: string | null;
   };
+  replies?: Comment[];
+  reactions?: CommentReaction[];
 }
 
 export interface PaginatedResponse<T> {

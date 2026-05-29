@@ -1,58 +1,53 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import { Post, PaginatedResponse } from '@/types';
-import { api } from '@/lib/api';
+import { usePostsStore } from '@/lib/store';
 import { PostCard } from '@/components/posts/PostCard';
 import { CreatePostForm } from '@/components/posts/CreatePostForm';
 import { PostSkeleton } from '@/components/ui/Skeleton';
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { posts, fetchPosts, deletePost, updatePost, isLoading, error, currentPage, totalPages } = usePostsStore();
+  const [localLoading, setLocalLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  const fetchPosts = useCallback(async (p = 1) => {
-    if (p === 1) setLoading(true);
-    else setLoadingMore(true);
-    try {
-      const { data } = await api.get<PaginatedResponse<Post>>(`/posts?page=${p}&limit=10`);
-      if (p === 1) setPosts(data.data);
-      else setPosts((prev) => [...prev, ...data.data]);
-      setTotalPages(data.meta.totalPages);
-    } catch {
-      toast.error('Failed to load feed');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
 
   useEffect(() => {
-    fetchPosts(1);
+    const loadInitialPosts = async () => {
+      setLocalLoading(true);
+      await fetchPosts(1, 10);
+      setLocalLoading(false);
+    };
+    loadInitialPosts();
   }, [fetchPosts]);
 
-  const handleCreated = (post: Post) => {
-    setPosts((prev) => [post, ...prev]);
-  };
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleDelete = (id: string) => {
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+    deletePost(id);
   };
 
-  const handleUpdate = (updated: Post) => {
-    setPosts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  const handleUpdate = () => {
+    // Update is handled by the store
   };
 
-  const loadMore = () => {
-    const next = page + 1;
-    setPage(next);
-    fetchPosts(next);
+  const handleCreated = async () => {
+    // Reset to first page after creating a post
+    await fetchPosts(1, 10);
   };
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    await fetchPosts(currentPage + 1, 10);
+    setLoadingMore(false);
+  };
+
+  const loading = localLoading || isLoading;
 
   return (
     <div className="animate-fade-in">
@@ -105,7 +100,7 @@ export default function FeedPage() {
             ))}
           </div>
 
-          {page < totalPages && (
+          {currentPage < totalPages && (
             <div className="flex justify-center mt-6">
               <button
                 onClick={loadMore}
