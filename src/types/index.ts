@@ -29,6 +29,7 @@ export interface Post {
   id: string;
   content: string;
   imageUrl?: string | null;
+  videoUrl?: string | null;
   authorId: string;
   createdAt: string;
   updatedAt: string;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Image, Send, X } from 'lucide-react';
+import { Image, Video, Send, X } from 'lucide-react';
 import { api, getErrorMessage } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import { Post } from '@/types';
@@ -16,7 +16,9 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
   const { user } = useAuthStore();
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
+  const [showVideoInput, setShowVideoInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const maxChars = 500;
 
@@ -25,13 +27,16 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
     if (!content.trim()) return;
     setLoading(true);
     try {
-      const payload: { content: string; imageUrl?: string } = { content: content.trim() };
+      const payload: { content: string; imageUrl?: string; videoUrl?: string } = { content: content.trim() };
       if (imageUrl.trim()) payload.imageUrl = imageUrl.trim();
+      if (videoUrl.trim()) payload.videoUrl = videoUrl.trim();
       const { data } = await api.post<Post>('/posts', payload);
       onCreated(data);
       setContent('');
       setImageUrl('');
+      setVideoUrl('');
       setShowImageInput(false);
+      setShowVideoInput(false);
       toast.success('Posted!');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -89,6 +94,32 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
             </div>
           )}
 
+          {showVideoInput && (
+            <div className="flex items-center gap-2 mb-3 animate-slide-down">
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://example.com/video.mp4"
+                className="flex-1 px-3 py-2 rounded-lg text-xs"
+                style={{
+                  background: '#faf8f3',
+                  border: '1.5px solid #e0dbd0',
+                  color: '#0d0d0d',
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => { setShowVideoInput(false); setVideoUrl(''); }}
+                className="p-1.5 rounded-lg"
+                style={{ color: '#a8a89e' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: '#f0ebe0' }}>
             <div className="flex items-center gap-2">
               <button
@@ -102,6 +133,18 @@ export function CreatePostForm({ onCreated }: CreatePostFormProps) {
               >
                 <Image size={16} />
                 <span>Image</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowVideoInput(!showVideoInput)}
+                className="p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1.5"
+                style={{
+                  color: showVideoInput ? '#c8a96e' : '#a8a89e',
+                  background: showVideoInput ? '#f5edd8' : 'transparent',
+                }}
+              >
+                <Video size={16} />
+                <span>Video</span>
               </button>
             </div>
 

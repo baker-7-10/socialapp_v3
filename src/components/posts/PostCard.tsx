@@ -9,6 +9,7 @@ import { Post } from '@/types';
 import { api, getErrorMessage } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
 import { Avatar } from '@/components/ui/Avatar';
+import { VideoPlayer } from '@/components/ui/Videoplayer'; // ← جديد
 import clsx from 'clsx';
 
 interface PostCardProps {
@@ -96,10 +97,7 @@ export function PostCard({ post, onDelete, onUpdate, showCommentToggle = true }:
           <Link href={`/users/${post.author.id}`} className="flex items-center gap-3 group">
             <Avatar src={post.author.avatarUrl} username={post.author.username} size="md" />
             <div>
-              <p
-                className="text-sm font-semibold group-hover:underline"
-                style={{ color: '#0d0d0d' }}
-              >
+              <p className="text-sm font-semibold group-hover:underline" style={{ color: '#0d0d0d' }}>
                 @{post.author.username}
               </p>
               <p className="text-xs" style={{ color: '#a8a89e' }}>
@@ -125,6 +123,7 @@ export function PostCard({ post, onDelete, onUpdate, showCommentToggle = true }:
               >
                 <MoreHorizontal size={16} />
               </button>
+
               {showMenu && (
                 <div
                   className="absolute right-0 top-8 z-10 rounded-lg shadow-lg border py-1 w-36 animate-scale-in"
@@ -194,7 +193,14 @@ export function PostCard({ post, onDelete, onUpdate, showCommentToggle = true }:
           </p>
         )}
 
-        {/* Image */}
+        {/* ── فيديو (أي نوع) ── */}
+        {post.videoUrl && !editing && (
+          <div className="mb-3">
+            <VideoPlayer url={post.videoUrl} />
+          </div>
+        )}
+
+        {/* صورة */}
         {post.imageUrl && !editing && (
           <img
             src={post.imageUrl}
@@ -209,10 +215,7 @@ export function PostCard({ post, onDelete, onUpdate, showCommentToggle = true }:
           <button
             onClick={handleLike}
             disabled={likeLoading}
-            className={clsx(
-              'flex items-center gap-1.5 text-sm transition-all py-1',
-              liked ? 'text-red-500' : ''
-            )}
+            className={clsx('flex items-center gap-1.5 text-sm transition-all py-1')}
             style={{ color: liked ? '#d94f3d' : '#a8a89e' }}
           >
             <Heart
@@ -236,7 +239,6 @@ export function PostCard({ post, onDelete, onUpdate, showCommentToggle = true }:
         </div>
       </div>
 
-      {/* Close menu overlay */}
       {showMenu && (
         <div className="fixed inset-0 z-0" onClick={() => setShowMenu(false)} />
       )}
